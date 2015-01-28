@@ -4,7 +4,7 @@
 require('angular-storage');
 
 angular.module('easybib-api-client', ['angular-storage'])
-  .factory(require('./easybib-api-client'));
+  .service('EasyBibApiClient', require('./easybib-api-client'));
 
 },{"./easybib-api-client":4,"angular":3,"angular-storage":2}],2:[function(require,module,exports){
 (function() {
