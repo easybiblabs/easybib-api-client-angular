@@ -25,9 +25,13 @@
     "renameify": "0.3.0",
     "sinon": "1.12.1",
     "sinon-chai": "2.6.0",
-    "vinyl-source-stream": "1.0.0"
+    "vinyl-source-stream": "1.0.0",
+    "a0-angular-storage": "git+https://github.com/auth0/angular-storage#v0.0.9"
   },
   "dependencies": {
     "angular-bsfy": "1.3.8-1"
+  },
+  "browser": {
+    "angular-storage": "./node_modules/angular-storage/dist/angular-storage.js"
   }
 }
