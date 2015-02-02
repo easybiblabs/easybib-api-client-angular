@@ -2,7 +2,7 @@ var angular = require('angular-bsfy');
 
 module.exports = (function() {
   'use strict';
-  var EasyBibApiClient = function(UserProfile, $q, $http, store, easyBibApiAccessUrl) {
+  var EasyBibApiClient = function($q, $http, store, easyBibApiAccessUrl) {
     this.store = store;
     this.$q = $q;
     this.$http = $http;
