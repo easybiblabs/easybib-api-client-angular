@@ -24,7 +24,6 @@
     "karma-sinon": "1.0.4",
     "karma-sinon-chai": "0.2.0",
     "mocha": "2.0.1",
-    "q": "1.1.2",
     "renameify": "0.3.0",
     "sinon": "1.12.1",
     "sinon-chai": "2.6.0",
