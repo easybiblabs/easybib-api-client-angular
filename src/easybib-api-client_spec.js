@@ -18,7 +18,7 @@ var fixtures = {
     'Accept': 'application/vnd.com.easybib.data+json',
     'Authorization': 'Bearer bd7ba31865b69f58ea52a4298cb7ea1a826ddebd'
   },
-  requestHeadersAccept: {
+  requestHeadersExt: {
     'Accept': 'application/vnd.com.easybib.data+json',
     'Authorization': 'Bearer bd7ba31865b69f58ea52a4298cb7ea1a826ddebd',
     'Content-Type': 'application/json;charset=utf-8'
@@ -30,7 +30,7 @@ var fixtures = {
 describe('EasyBib Api Client', function() {
   'use strict';
 
-  var $httpBackend, easybibApiClient;
+  var $httpBackend, easybibApiClient, $timeout, $rootScope;
 
   beforeEach(angular.mock.module('easybib-api-client'));
   beforeEach(angular.mock.module(function($provide) {
@@ -41,9 +41,11 @@ describe('EasyBib Api Client', function() {
     });
   }));
 
-  beforeEach(inject(function($injector, _EasyBibApiClient_) {
-    easybibApiClient = _EasyBibApiClient_;
+  beforeEach(inject(function($injector) {
+    easybibApiClient = $injector.get('EasyBibApiClient');
+    $timeout = $injector.get('$timeout');
     $httpBackend = $injector.get('$httpBackend');
+    $rootScope = $injector.get('$rootScope');
   }));
 
   afterEach(function() {
@@ -72,7 +74,7 @@ describe('EasyBib Api Client', function() {
         JSON.stringify(fixtures.accessTokenResponse));
 
       $httpBackend.expectPOST('http://noopurl.notld/citations',
-        JSON.stringify({ data: 'nothing'}), fixtures.requestHeadersAccept)
+        JSON.stringify({ data: 'nothing'}), fixtures.requestHeadersExt)
       .respond(200, {});
 
       easybibApiClient.post('http://noopurl.notld/citations', 'nothing');
@@ -87,7 +89,7 @@ describe('EasyBib Api Client', function() {
         JSON.stringify(fixtures.accessTokenResponse));
 
       $httpBackend.expectPUT('http://noopurl.notld/citations',
-        JSON.stringify({ data: 'nothing'}), fixtures.requestHeadersAccept)
+        JSON.stringify({ data: 'nothing'}), fixtures.requestHeadersExt)
       .respond(200, {});
 
       easybibApiClient.put('http://noopurl.notld/citations', 'nothing');
@@ -112,15 +114,19 @@ describe('EasyBib Api Client', function() {
   });
 
   describe('request()', function() {
-    it('should fetch access-token on error and retry', function(done) {
-      var self = this;
-      self.done = done;
+    it('should fetch access-token on 401 error and retry', function() {
       localStorage.removeItem('easybib-api-access-data');
+      easybibApiClient.get('http://noopurl.notld/citations');
 
       $httpBackend.expectGET('http://noopurl.notld/access_token')
         .respond(200, fixtures.accessTokenResponse);
+
       $httpBackend.expectGET('http://noopurl.notld/citations',
         fixtures.requestHeaders).respond(401, 'Bad Request');
+
+      // important: this is called implictly by .flush
+      $rootScope.$digest();
+      $httpBackend.flush(2, false);
 
       $httpBackend.expectGET('http://noopurl.notld/access_token')
         .respond(200, fixtures.accessTokenResponse);
@@ -128,15 +134,86 @@ describe('EasyBib Api Client', function() {
       $httpBackend.expectGET('http://noopurl.notld/citations',
         fixtures.requestHeaders).respond(200, fixtures.citationResponse);
 
-      easybibApiClient.get('http://noopurl.notld/citations')
-      .then(function() {
-        self.done();
-      })
-      .catch(function() {
-        done();
-      });
+      $timeout.flush();
 
-      $httpBackend.flush();
+      $httpBackend.flush(2, false);
+    });
+
+    it('should fetch access-token on 400 error and retry', function() {
+      localStorage.removeItem('easybib-api-access-data');
+      easybibApiClient.get('http://noopurl.notld/citations');
+
+      $httpBackend.expectGET('http://noopurl.notld/access_token')
+        .respond(200, fixtures.accessTokenResponse);
+
+      $httpBackend.expectGET('http://noopurl.notld/citations',
+        fixtures.requestHeaders).respond(400, 'Bad Request');
+
+      // important: this is called implictly by .flush
+      $rootScope.$digest();
+      $httpBackend.flush(2, false);
+
+      $httpBackend.expectGET('http://noopurl.notld/access_token')
+        .respond(200, fixtures.accessTokenResponse);
+
+      $httpBackend.expectGET('http://noopurl.notld/citations',
+        fixtures.requestHeaders).respond(200, fixtures.citationResponse);
+
+      $timeout.flush();
+
+      $httpBackend.flush(2, false);
+    });
+
+    it.only('retryCount is used correctly', function() {
+      localStorage.removeItem('easybib-api-access-data');
+      easybibApiClient.retryCount = 2;
+      easybibApiClient.get('http://noopurl.notld/citations');
+
+      $httpBackend.expectGET('http://noopurl.notld/access_token')
+        .respond(200, fixtures.accessTokenResponse);
+
+      $httpBackend.expectGET('http://noopurl.notld/citations',
+        fixtures.requestHeaders).respond(401, 'Bad Request');
+
+      // important: this is called implictly by .flush
+      $rootScope.$digest();
+      $httpBackend.flush(2, false);
+
+      $httpBackend.expectGET('http://noopurl.notld/access_token')
+        .respond(200, fixtures.accessTokenResponse);
+
+      // NOTE: phantom reloads page if 2 errors of the same kind a returned
+      $httpBackend.expectGET('http://noopurl.notld/citations',
+        fixtures.requestHeaders).respond(400, fixtures.citationResponse);
+
+      $timeout.flush(1000);
+      $httpBackend.flush(2, false);
+
+      $httpBackend.expectGET('http://noopurl.notld/access_token')
+        .respond(200, fixtures.accessTokenResponse);
+
+      // NOTE: phantom reloads page if 2 errors of the same kind a returned
+      $httpBackend.expectGET('http://noopurl.notld/citations',
+        fixtures.requestHeaders).respond(400, fixtures.citationResponse);
+
+      $timeout.flush(1000);
+      $httpBackend.flush(2, false);
+
+    });
+
+    it('should not fetch access-token on 404 error', function() {
+      localStorage.removeItem('easybib-api-access-data');
+      easybibApiClient.get('http://noopurl.notld/citations');
+
+      $httpBackend.expectGET('http://noopurl.notld/access_token')
+        .respond(200, fixtures.accessTokenResponse);
+
+      $httpBackend.expectGET('http://noopurl.notld/citations',
+        fixtures.requestHeaders).respond(404, 'Bad Request');
+
+      // important: this is called implictly by .flush
+      $rootScope.$digest();
+      $httpBackend.flush(2, false);
     });
   });
 });

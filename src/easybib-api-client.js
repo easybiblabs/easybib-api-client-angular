@@ -1,6 +1,6 @@
 var angular = require('angular-bsfy');
 
-module.exports = function($q, $http, store, easyBibApiAccessUrl) {
+module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
   'use strict';
 
   var self = this, utils;
@@ -11,11 +11,6 @@ module.exports = function($q, $http, store, easyBibApiAccessUrl) {
 
   // private
   utils = {
-    url: {
-      access: function() {
-        return easyBibApiAccessUrl();
-      }
-    },
     deleteAccessToken: function() {
       self.store.remove('easybib-api-access-data');
     },
@@ -30,7 +25,7 @@ module.exports = function($q, $http, store, easyBibApiAccessUrl) {
         return deferred.promise;
       }
 
-      $http.get(utils.url.access())
+      $http.get(easyBibApiAccessUrl())
         .then(function(response) {
           self.store.set('easybib-api-access-data', response.data);
           deferred.resolve(response.data);
@@ -59,14 +54,14 @@ module.exports = function($q, $http, store, easyBibApiAccessUrl) {
       return requestObj;
     },
     retry: function(reqOpts, error, df, times, waitMs) {
-      var cont;
+      var process;
       // remove saved accessToken to fetch a new one
       utils.deleteAccessToken();
 
       times = (typeof times === 'undefined') ? 1 : times;
       waitMs = waitMs || 1000;
 
-      cont = function() {
+      process = function() {
         utils.getAccessToken()
           .then(function(accessData) {
             // jscs:disable
@@ -82,8 +77,9 @@ module.exports = function($q, $http, store, easyBibApiAccessUrl) {
       };
 
       if (times > 0) {
-        cont();
-        setTimeout(cont, waitMs);
+        $timeout(function() {
+          process();
+        }, waitMs);
         return;
       }
       df.reject(error);
@@ -91,6 +87,7 @@ module.exports = function($q, $http, store, easyBibApiAccessUrl) {
   };
 
   // public api
+  self.retryCount = 1;
   self.get = function(url) {
     var deferred = self.$q.defer();
     utils.getAccessToken()
@@ -164,7 +161,7 @@ module.exports = function($q, $http, store, easyBibApiAccessUrl) {
 
   self.request = function(opts, retryCount) {
     var deferred = self.$q.defer();
-    retryCount = (typeof retryCount === 'undefined') ? 1 : retryCount;
+    retryCount = (typeof retryCount === 'undefined') ? self.retryCount : retryCount;
 
     self.$http(opts)
       .then(function(data) {
