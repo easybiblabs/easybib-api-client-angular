@@ -164,7 +164,7 @@ describe('EasyBib Api Client', function() {
       $httpBackend.flush(2, false);
     });
 
-    it.only('retryCount is used correctly', function() {
+    it('retryCount is used correctly', function() {
       localStorage.removeItem('easybib-api-access-data');
       easybibApiClient.retryCount = 2;
       easybibApiClient.get('http://noopurl.notld/citations');
