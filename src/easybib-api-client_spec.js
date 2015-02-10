@@ -223,6 +223,9 @@ describe('EasyBib Api Client', function() {
       localStorage.removeItem('easybib-api-access-data');
       easybibApiClient.get('http://noopurl.notld/citations')
       .then(function() {
+        // NOTE: in case that the underlying implementation
+        // is changing something unwanted, so this
+        // error makes it obvious whats goin wrong
         assert.ok(0, 'request was not rejected');
         done();
       }, function() {
