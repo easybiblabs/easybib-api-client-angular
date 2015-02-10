@@ -31,7 +31,6 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
           deferred.resolve(response.data);
         })
         .catch(function(error) {
-
           // accessToken couldn't be fetched
           // so need to add a generic error handler here
           deferred.reject(error);
@@ -72,6 +71,8 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
             self.request(reqOpts, times - 1)
               .then(function(data) {
                 df.resolve(data);
+              }, function(error) {
+                df.reject(error);
               });
           });
       };
@@ -97,6 +98,8 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
         // jscs:enable
         self.request(req).then(function(response) {
           deferred.resolve(response);
+        }, function(error) {
+          deferred.reject(error);
         });
       });
     return deferred.promise;

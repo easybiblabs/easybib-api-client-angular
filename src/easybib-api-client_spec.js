@@ -215,5 +215,39 @@ describe('EasyBib Api Client', function() {
       $rootScope.$digest();
       $httpBackend.flush(2, false);
     });
+
+    it.only('should reject if retries also fail', function (done) {
+
+      localStorage.removeItem('easybib-api-access-data');
+      easybibApiClient.get('http://noopurl.notld/citations')
+      .then(function () {
+        assert.ok(0, 'request was not rejected');
+        done();
+      }, function () {
+        assert.ok(1, 'request should fail and get rejected');
+        done();
+      });
+
+      $httpBackend.expectGET('http://noopurl.notld/access_token')
+        .respond(200, fixtures.accessTokenResponse);
+
+      $httpBackend.expectGET('http://noopurl.notld/citations',
+        fixtures.requestHeaders).respond(400, 'Bad Request');
+
+      // important: this is called implictly by .flush
+      $rootScope.$digest();
+      $httpBackend.flush(2, false);
+
+      $httpBackend.expectGET('http://noopurl.notld/access_token')
+        .respond(200, fixtures.accessTokenResponse);
+
+      $httpBackend.expectGET('http://noopurl.notld/citations',
+        fixtures.requestHeaders).respond(401,'Bad Request');
+
+      $timeout.flush();
+
+      $httpBackend.flush(2, false);
+
+    });
   });
 });
