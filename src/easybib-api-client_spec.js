@@ -11,6 +11,8 @@ chai.should();
 var sinonChai = require('sinon-chai');
 chai.use(sinonChai);
 
+var assert = require('assert');
+
 // jscs:disable
 var fixtures = {
   accessTokenResponse: JSON.parse(fs.readFileSync(__dirname + '/fixtures/access_token_response.json')),
@@ -214,6 +216,43 @@ describe('EasyBib Api Client', function() {
       // important: this is called implictly by .flush
       $rootScope.$digest();
       $httpBackend.flush(2, false);
+    });
+
+    it('should reject if retries also fail', function(done) {
+
+      localStorage.removeItem('easybib-api-access-data');
+      easybibApiClient.get('http://noopurl.notld/citations')
+      .then(function() {
+        // NOTE: in case that the underlying implementation
+        // is changing something unwanted, so this
+        // error makes it obvious whats goin wrong
+        assert.ok(0, 'request was not rejected');
+        done();
+      }, function() {
+        assert.ok(1, 'request should fail and get rejected');
+        done();
+      });
+
+      $httpBackend.expectGET('http://noopurl.notld/access_token')
+        .respond(200, fixtures.accessTokenResponse);
+
+      $httpBackend.expectGET('http://noopurl.notld/citations',
+        fixtures.requestHeaders).respond(400, 'Bad Request');
+
+      // important: this is called implictly by .flush
+      $rootScope.$digest();
+      $httpBackend.flush(2, false);
+
+      $httpBackend.expectGET('http://noopurl.notld/access_token')
+        .respond(200, fixtures.accessTokenResponse);
+
+      $httpBackend.expectGET('http://noopurl.notld/citations',
+        fixtures.requestHeaders).respond(401, 'Bad Request');
+
+      $timeout.flush();
+
+      $httpBackend.flush(2, false);
+
     });
   });
 });

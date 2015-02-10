@@ -31,7 +31,6 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
           deferred.resolve(response.data);
         })
         .catch(function(error) {
-
           // accessToken couldn't be fetched
           // so need to add a generic error handler here
           deferred.reject(error);
@@ -72,6 +71,8 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
             self.request(reqOpts, times - 1)
               .then(function(data) {
                 df.resolve(data);
+              }, function(error) {
+                df.reject(error);
               });
           });
       };
@@ -89,22 +90,18 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
   // public api
   self.retryCount = 1;
   self.get = function(url) {
-    var deferred = self.$q.defer();
-    utils.getAccessToken()
+    return utils.getAccessToken()
       .then(function(accessData) {
         // jscs:disable
         var req = utils.createRequest({url: url}, accessData.access_token);
         // jscs:enable
-        self.request(req).then(function(response) {
-          deferred.resolve(response);
-        });
+        return self.request(req);
+
       });
-    return deferred.promise;
   };
 
   self.post = function(url, data) {
-    var deferred = self.$q.defer();
-    utils.getAccessToken()
+    return utils.getAccessToken()
       .then(function(accessData) {
         // jscs:disable
         var req = utils.createRequest({
@@ -114,16 +111,12 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
         }, accessData.access_token);
         // jscs:enable
 
-        self.request(req).then(function(response) {
-          deferred.resolve(response);
-        });
+        return self.request(req);
       });
-    return deferred.promise;
   };
 
   self.put = function(url, data) {
-    var deferred = self.$q.defer();
-    utils.getAccessToken()
+    return utils.getAccessToken()
       .then(function(accessData) {
         // jscs:disable
         var req = utils.createRequest({
@@ -133,17 +126,13 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
         }, accessData.access_token);
         // jscs:enable
 
-        self.request(req).then(function(response) {
-          deferred.resolve(response);
-        });
+        return self.request(req);
       });
-    return deferred.promise;
   };
 
     // better remove here
   self.delete = function(url) {
-    var deferred = self.$q.defer();
-    utils.getAccessToken()
+    return utils.getAccessToken()
       .then(function(accessData) {
         // jscs:disable
         var req = utils.createRequest({
@@ -152,11 +141,8 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
         }, accessData.access_token);
         // jscs:enable
 
-        self.request(req).then(function(response) {
-          deferred.resolve(response);
-        });
+        return self.request(req);
       });
-    return deferred.promise;
   };
 
   self.request = function(opts, retryCount) {
