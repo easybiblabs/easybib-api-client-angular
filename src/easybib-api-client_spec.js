@@ -216,7 +216,7 @@ describe('EasyBib Api Client', function() {
       $httpBackend.flush(2, false);
     });
 
-    it.only('should reject if retries also fail', function (done) {
+    it('should reject if retries also fail', function (done) {
 
       localStorage.removeItem('easybib-api-access-data');
       easybibApiClient.get('http://noopurl.notld/citations')
