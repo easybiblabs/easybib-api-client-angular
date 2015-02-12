@@ -8,6 +8,7 @@ endif
 ci:
 	gulp lint
 	karma start --single-run
+	$(MAKE) diff
 
 install:
 	npm install
@@ -17,3 +18,10 @@ install:
 
 release:
 	gulp release
+
+diff:
+	$(MAKE) release
+	@git diff --exit-code dist/index.js || \
+		(echo "Release file \"dist/index.js\" is out of date."; false)
+	@git diff --exit-code dist/index.min.js || \
+		(echo "Release file \"dist/index.min.js\" is out of date."; false)
