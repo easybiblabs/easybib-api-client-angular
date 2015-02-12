@@ -123,41 +123,37 @@ angular.module('angular-storage.store', ['angular-storage.internalStore'])
 },{}],4:[function(require,module,exports){
 
 
-module.exports = (function() {
+module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
   'use strict';
-  var EasyBibApiClient = function($q, $http, store, easyBibApiAccessUrl) {
-    this.store = store;
-    this.$q = $q;
-    this.$http = $http;
 
-    this.url = {};
+  var self = this, utils;
 
-    this.url = {
-      access: function() {
-        return easyBibApiAccessUrl();
-      }
-    };
-  };
+  self.store = store;
+  self.$q = $q;
+  self.$http = $http;
 
-  EasyBibApiClient.prototype = {
+  // private
+  utils = {
+    deleteAccessToken: function() {
+      self.store.remove('easybib-api-access-data');
+    },
     getAccessToken: function() {
-      var deferred, accessData, self = this;
+      var deferred, accessData;
 
-      deferred = self.$q.defer();
-      accessData = self.store.get('easybib-api-access-data');
+      deferred = $q.defer();
+      accessData = store.get('easybib-api-access-data');
 
       if (accessData !== null) {
         deferred.resolve(accessData);
         return deferred.promise;
       }
 
-      this.$http.get(this.url.access())
+      $http.get(easyBibApiAccessUrl())
         .then(function(response) {
           self.store.set('easybib-api-access-data', response.data);
           deferred.resolve(response.data);
         })
         .catch(function(error) {
-
           // accessToken couldn't be fetched
           // so need to add a generic error handler here
           deferred.reject(error);
@@ -179,99 +175,16 @@ module.exports = (function() {
       angular.extend(requestObj, initObj);
       return requestObj;
     },
-    get: function(url) {
-      var self = this, deferred = self.$q.defer();
-      self.getAccessToken()
-        .then(function(accessData) {
-          // jscs:disable
-          var req = self.createRequest({url: url}, accessData.access_token);
-          // jscs:enable
-          self.request(req).then(function(response) {
-            deferred.resolve(response);
-          });
-        });
-      return deferred.promise;
-    },
-    post: function(url, data) {
-      var self = this, deferred = self.$q.defer();
-      self.getAccessToken()
-        .then(function(accessData) {
-          // jscs:disable
-          var req = self.createRequest({
-            method: 'POST',
-            data: {'data': data},
-            url: url
-          }, accessData.access_token);
-          // jscs:enable
-
-          self.request(req).then(function(response) {
-            deferred.resolve(response);
-          });
-        });
-      return deferred.promise;
-    },
-    put: function(url, data) {
-      var self = this, deferred = self.$q.defer();
-      self.getAccessToken()
-        .then(function(accessData) {
-          // jscs:disable
-          var req = self.createRequest({
-            method: 'PUT',
-            data: {'data': data},
-            url: url
-          }, accessData.access_token);
-          // jscs:enable
-
-          self.request(req).then(function(response) {
-            deferred.resolve(response);
-          });
-        });
-      return deferred.promise;
-    },
-    // better remove here
-    delete: function(url) {
-      var self = this, deferred = self.$q.defer();
-      self.getAccessToken()
-        .then(function(accessData) {
-          // jscs:disable
-          var req = self.createRequest({
-            method: 'DELETE',
-            url: url
-          }, accessData.access_token);
-          // jscs:enable
-
-          self.request(req).then(function(response) {
-            deferred.resolve(response);
-          });
-        });
-      return deferred.promise;
-    },
-    request: function(opts, retryCount) {
-      var self = this, deferred = self.$q.defer();
-      retryCount = (typeof retryCount === 'undefined') ? 1 : retryCount;
-
-      self.$http(opts)
-        .then(function(data) {
-          deferred.resolve(data);
-        })
-        .catch(function(error) {
-          if (error.status === 401 || error.status === 400) {
-            return self.retry(opts, error, deferred, retryCount);
-          }
-          deferred.reject(error);
-        });
-      return deferred.promise;
-    },
     retry: function(reqOpts, error, df, times, waitMs) {
-      var self = this, cont;
+      var process;
       // remove saved accessToken to fetch a new one
-      self.store.remove('easybib-api-access-data');
+      utils.deleteAccessToken();
 
       times = (typeof times === 'undefined') ? 1 : times;
       waitMs = waitMs || 1000;
 
-      cont = function() {
-        self.getAccessToken()
+      process = function() {
+        utils.getAccessToken()
           .then(function(accessData) {
             // jscs:disable
             reqOpts.headers.Authorization =
@@ -281,20 +194,98 @@ module.exports = (function() {
             self.request(reqOpts, times - 1)
               .then(function(data) {
                 df.resolve(data);
+              }, function(error) {
+                df.reject(error);
               });
           });
       };
 
       if (times > 0) {
-        setTimeout(cont, waitMs);
+        $timeout(function() {
+          process();
+        }, waitMs);
         return;
       }
       df.reject(error);
     }
   };
 
-  return EasyBibApiClient;
-}());
+  // public api
+  self.retryCount = 1;
+  self.get = function(url) {
+    return utils.getAccessToken()
+      .then(function(accessData) {
+        // jscs:disable
+        var req = utils.createRequest({url: url}, accessData.access_token);
+        // jscs:enable
+        return self.request(req);
+
+      });
+  };
+
+  self.post = function(url, data) {
+    return utils.getAccessToken()
+      .then(function(accessData) {
+        // jscs:disable
+        var req = utils.createRequest({
+          method: 'POST',
+          data: {'data': data},
+          url: url
+        }, accessData.access_token);
+        // jscs:enable
+
+        return self.request(req);
+      });
+  };
+
+  self.put = function(url, data) {
+    return utils.getAccessToken()
+      .then(function(accessData) {
+        // jscs:disable
+        var req = utils.createRequest({
+          method: 'PUT',
+          data: {'data': data},
+          url: url
+        }, accessData.access_token);
+        // jscs:enable
+
+        return self.request(req);
+      });
+  };
+
+    // better remove here
+  self.delete = function(url) {
+    return utils.getAccessToken()
+      .then(function(accessData) {
+        // jscs:disable
+        var req = utils.createRequest({
+          method: 'DELETE',
+          url: url
+        }, accessData.access_token);
+        // jscs:enable
+
+        return self.request(req);
+      });
+  };
+
+  self.request = function(opts, retryCount) {
+    var deferred = self.$q.defer();
+    retryCount = (typeof retryCount === 'undefined') ? self.retryCount : retryCount;
+
+    self.$http(opts)
+      .then(function(data) {
+        deferred.resolve(data);
+      })
+      .catch(function(error) {
+        if (error.status === 401 || error.status === 400) {
+          return utils.retry(opts, error, deferred, retryCount);
+        }
+        deferred.reject(error);
+      });
+    return deferred.promise;
+  };
+
+};
 
 },{"angular":3}]},{},[1])(1)
 });
