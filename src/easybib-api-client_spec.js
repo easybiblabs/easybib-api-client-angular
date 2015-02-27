@@ -1,5 +1,6 @@
 /*global __dirname*/
 var angular = require('angular-bsfy');
+require('angular-storage');
 require('angular-mocks');
 require('./index');
 
@@ -62,7 +63,7 @@ describe('EasyBib Api Client', function() {
 
       $httpBackend.expectGET('http://noopurl.notld/citations',
         fixtures.requestHeaders)
-      .respond(200, {});
+        .respond(200, {});
 
       easybibApiClient.get('http://noopurl.notld/citations');
 
@@ -76,8 +77,8 @@ describe('EasyBib Api Client', function() {
         JSON.stringify(fixtures.accessTokenResponse));
 
       $httpBackend.expectPOST('http://noopurl.notld/citations',
-        JSON.stringify({ data: 'nothing'}), fixtures.requestHeadersExt)
-      .respond(200, {});
+        JSON.stringify({data: 'nothing'}), fixtures.requestHeadersExt)
+        .respond(200, {});
 
       easybibApiClient.post('http://noopurl.notld/citations', 'nothing');
 
@@ -91,8 +92,8 @@ describe('EasyBib Api Client', function() {
         JSON.stringify(fixtures.accessTokenResponse));
 
       $httpBackend.expectPUT('http://noopurl.notld/citations',
-        JSON.stringify({ data: 'nothing'}), fixtures.requestHeadersExt)
-      .respond(200, {});
+        JSON.stringify({data: 'nothing'}), fixtures.requestHeadersExt)
+        .respond(200, {});
 
       easybibApiClient.put('http://noopurl.notld/citations', 'nothing');
 
@@ -107,7 +108,7 @@ describe('EasyBib Api Client', function() {
 
       $httpBackend.expectDELETE('http://noopurl.notld/citations',
         fixtures.requestHeaders)
-      .respond(200, {});
+        .respond(200, {});
 
       easybibApiClient.delete('http://noopurl.notld/citations', 'nothing');
 
@@ -222,16 +223,16 @@ describe('EasyBib Api Client', function() {
 
       localStorage.removeItem('easybib-api-access-data');
       easybibApiClient.get('http://noopurl.notld/citations')
-      .then(function() {
-        // NOTE: in case that the underlying implementation
-        // is changing something unwanted, so this
-        // error makes it obvious whats goin wrong
-        assert.ok(0, 'request was not rejected');
-        done();
-      }, function() {
-        assert.ok(1, 'request should fail and get rejected');
-        done();
-      });
+        .then(function() {
+          // NOTE: in case that the underlying implementation
+          // is changing something unwanted, so this
+          // error makes it obvious whats goin wrong
+          assert.ok(0, 'request was not rejected');
+          done();
+        }, function() {
+          assert.ok(1, 'request should fail and get rejected');
+          done();
+        });
 
       $httpBackend.expectGET('http://noopurl.notld/access_token')
         .respond(200, fixtures.accessTokenResponse);
