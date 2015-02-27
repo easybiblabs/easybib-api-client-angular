@@ -1,6 +1,6 @@
-var angular = require('angular-bsfy');
+module.exports = (function() {
+  'use strict';
 
-require('angular-storage');
-
-angular.module('easybib-api-client', ['angular-storage'])
-  .service('EasyBibApiClient', require('./easybib-api-client'));
+  angular.module('easybib-api-client', ['angular-storage'])
+    .service('EasyBibApiClient', require('./easybib-api-client'));
+})();
