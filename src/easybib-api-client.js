@@ -1,4 +1,4 @@
-var angular = require('angular-bsfy');
+var angular = require('angular');
 
 module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
   'use strict';
