@@ -1,3 +1,5 @@
+require('angular-storage');
+
 module.exports = (function() {
   'use strict';
 
