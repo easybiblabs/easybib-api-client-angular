@@ -1,5 +1,5 @@
 /*global __dirname*/
-var angular = require('angular');
+require('angular');
 require('angular-storage');
 require('angular-mocks');
 require('./index');
