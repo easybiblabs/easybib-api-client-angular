@@ -2,15 +2,13 @@
 module.exports = (function() {
   'use strict';
 
-  angular.module('easybib-api-client', ['angular-storage'])
+  angular.module('easybib-api-client', [
+    'angular-storage'
+  ])
     .service('EasyBibApiClient', require('./easybib-api-client'));
 })();
 
-},{"./easybib-api-client":3}],2:[function(require,module,exports){
-
-},{}],3:[function(require,module,exports){
-
-
+},{"./easybib-api-client":2}],2:[function(require,module,exports){
 module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
   'use strict';
 
@@ -175,5 +173,5 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
 
 };
 
-},{"angular":2}]},{},[1])(1)
+},{}]},{},[1])(1)
 });
