@@ -35,6 +35,7 @@
     "angular": "^1.3.8",
     "angular-storage": "0.0.10"
   },
+  "repository": "https://github.com/easybiblabs/easybib-api-client-angular",
   "browserify": {
     "transform": [
       "browserify-shim"
