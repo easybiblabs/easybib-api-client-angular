@@ -10,7 +10,7 @@ module.exports = (function() {
     .service('EasyBibApiClient', require('./easybib-api-client'));
 })();
 
-},{"./easybib-api-client":3,"angular-storage":2}],2:[function(require,module,exports){
+},{"./easybib-api-client":4,"angular-storage":2}],2:[function(require,module,exports){
 (function() {
 
 
@@ -190,6 +190,10 @@ angular.module('angular-storage.store', ['angular-storage.internalStore'])
 
 }());
 },{}],3:[function(require,module,exports){
+
+},{}],4:[function(require,module,exports){
+
+
 module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
   'use strict';
 
@@ -278,6 +282,7 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
   };
 
   // public api
+  self.globalHttpOptions = {};
   self.retryCount = 1;
   self.get = function(url) {
     return utils.getAccessToken()
@@ -339,6 +344,8 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
     var deferred = self.$q.defer();
     retryCount = (typeof retryCount === 'undefined') ? self.retryCount : retryCount;
 
+    angular.extend(opts, self.globalHttpOptions);
+
     self.$http(opts)
       .then(function(data) {
         deferred.resolve(data);
@@ -354,5 +361,5 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
 
 };
 
-},{}]},{},[1])(1)
+},{"angular":3}]},{},[1])(1)
 });
