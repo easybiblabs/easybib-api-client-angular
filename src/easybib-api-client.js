@@ -1,3 +1,5 @@
+var angular = require('angular');
+
 module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
   'use strict';
 
@@ -86,6 +88,7 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
   };
 
   // public api
+  self.globalHttpOptions = {};
   self.retryCount = 1;
   self.get = function(url) {
     return utils.getAccessToken()
@@ -146,6 +149,8 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
   self.request = function(opts, retryCount) {
     var deferred = self.$q.defer();
     retryCount = (typeof retryCount === 'undefined') ? self.retryCount : retryCount;
+
+    angular.extend(opts, self.globalHttpOptions);
 
     self.$http(opts)
       .then(function(data) {

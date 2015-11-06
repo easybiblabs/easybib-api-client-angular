@@ -71,6 +71,23 @@ describe('EasyBib Api Client', function() {
     });
   });
 
+  describe('get()', function() {
+    it('should use the globalOptions', function() {
+      localStorage.setItem('easybib-api-access-data',
+        JSON.stringify(fixtures.accessTokenResponse));
+
+      $httpBackend.expectGET('http://url-set-via-opts.example.com',
+        fixtures.requestHeaders)
+        .respond(200, {});
+
+      easybibApiClient.globalHttpOptions = {url: 'http://url-set-via-opts.example.com'};
+
+      easybibApiClient.get('http://noopurl.notld/citations');
+
+      $httpBackend.flush();
+    });
+  });
+
   describe('post()', function() {
     it('should add access-token to request headers', function() {
       localStorage.setItem('easybib-api-access-data',
