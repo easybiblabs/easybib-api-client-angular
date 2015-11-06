@@ -150,7 +150,7 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
     var deferred = self.$q.defer();
     retryCount = (typeof retryCount === 'undefined') ? self.retryCount : retryCount;
 
-    angular.merge(opts, self.globalHttpOptions);
+    angular.extend(opts, self.globalHttpOptions);
 
     self.$http(opts)
       .then(function(data) {
