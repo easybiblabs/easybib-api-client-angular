@@ -25,7 +25,7 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
         return deferred.promise;
       }
 
-      $http.get(easyBibApiAccessUrl())
+      $http.get(easyBibApiAccessUrl(), self.globalHttpOptions)
         .then(function(response) {
           self.store.set('easybib-api-access-data', response.data);
           deferred.resolve(response.data);
