@@ -10,7 +10,7 @@ module.exports = (function() {
     .service('EasyBibApiClient', require('./easybib-api-client'));
 })();
 
-},{"./easybib-api-client":4,"angular-storage":2}],2:[function(require,module,exports){
+},{"./easybib-api-client":5,"angular-storage":3}],2:[function(require,module,exports){
 (function() {
 
 
@@ -96,17 +96,16 @@ angular.module('angular-storage.internalStore', ['angular-storage.localStorage',
 
 angular.module('angular-storage.localStorage', ['angular-storage.cookieStorage'])
   .service('localStorage', ["$window", "$injector", function ($window, $injector) {
-    var localStorageAvailable = !!$window.localStorage;
+    var localStorageAvailable;
 
-    if (localStorageAvailable) {
-      try {
-        $window.localStorage.setItem('testKey', 'test');
-        $window.localStorage.removeItem('testKey');
-        localStorageAvailable = true;
-      } catch(e) {
-        localStorageAvailable = false;
-      }
+    try {
+      $window.localStorage.setItem('testKey', 'test');
+      $window.localStorage.removeItem('testKey');
+      localStorageAvailable = true;
+    } catch(e) {
+      localStorageAvailable = false;
     }
+
     if (localStorageAvailable) {
       this.set = function (what, value) {
         return $window.localStorage.setItem(what, value);
@@ -130,7 +129,17 @@ angular.module('angular-storage.localStorage', ['angular-storage.cookieStorage']
 
 angular.module('angular-storage.sessionStorage', ['angular-storage.cookieStorage'])
   .service('sessionStorage', ["$window", "$injector", function ($window, $injector) {
-    if ($window.sessionStorage) {
+    var sessionStorageAvailable;
+
+    try {
+      $window.sessionStorage.setItem('testKey', 'test');
+      $window.sessionStorage.removeItem('testKey');
+      sessionStorageAvailable = true;
+    } catch(e) {
+      sessionStorageAvailable = false;
+    }
+
+    if (sessionStorageAvailable) {
       this.set = function (what, value) {
         return $window.sessionStorage.setItem(what, value);
       };
@@ -190,11 +199,16 @@ angular.module('angular-storage.store', ['angular-storage.internalStore'])
 
 }());
 },{}],3:[function(require,module,exports){
+require('./dist/angular-storage.js');
+module.exports = 'angular-storage';
 
-},{}],4:[function(require,module,exports){
+
+},{"./dist/angular-storage.js":2}],4:[function(require,module,exports){
+
+},{}],5:[function(require,module,exports){
 
 
-module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
+module.exports = function($injector, $q, $http, store, $timeout, easyBibApiAccessUrl) {
   'use strict';
 
   var self = this, utils;
@@ -203,6 +217,9 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
   self.$q = $q;
   self.$http = $http;
   self.accessTokenHttpOptions = {};
+  if ($injector.has('easyBibApiAccessUsername')) {
+    self.checkUsername = $injector.get('easyBibApiAccessUsername');
+  }
 
   // private
   utils = {
@@ -216,12 +233,18 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
       accessData = store.get('easybib-api-access-data');
 
       if (accessData !== null) {
-        deferred.resolve(accessData);
-        return deferred.promise;
+        if (!self.checkUsername || self.checkUsername() === accessData.username) {
+          deferred.resolve(accessData);
+          return deferred.promise;
+        }
       }
 
       $http.get(easyBibApiAccessUrl(), self.accessTokenHttpOptions)
         .then(function(response) {
+          if (self.checkUsername) {
+            response.data.username = self.checkUsername();
+          }
+
           self.store.set('easybib-api-access-data', response.data);
           deferred.resolve(response.data);
         })
@@ -290,6 +313,7 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
       .then(function(accessData) {
         // jscs:disable
         var req = utils.createRequest({url: url}, accessData.access_token);
+
         // jscs:enable
         return self.request(req);
 
@@ -305,6 +329,7 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
           data: {'data': data},
           url: url
         }, accessData.access_token);
+
         // jscs:enable
 
         return self.request(req);
@@ -320,13 +345,14 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
           data: {'data': data},
           url: url
         }, accessData.access_token);
+
         // jscs:enable
 
         return self.request(req);
       });
   };
 
-    // better remove here
+  // better remove here
   self.delete = function(url) {
     return utils.getAccessToken()
       .then(function(accessData) {
@@ -335,6 +361,7 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
           method: 'DELETE',
           url: url
         }, accessData.access_token);
+
         // jscs:enable
 
         return self.request(req);
@@ -355,12 +382,14 @@ module.exports = function($q, $http, store, $timeout, easyBibApiAccessUrl) {
         if (error.status === 401 || error.status === 400) {
           return utils.retry(opts, error, deferred, retryCount);
         }
+
         deferred.reject(error);
       });
+
     return deferred.promise;
   };
 
 };
 
-},{"angular":3}]},{},[1])(1)
+},{"angular":4}]},{},[1])(1)
 });
