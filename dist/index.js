@@ -218,7 +218,7 @@ module.exports = function($injector, $q, $http, store, $timeout, easyBibApiAcces
   self.$http = $http;
   self.accessTokenHttpOptions = {};
   if ($injector.has('easyBibApiAccessUsername')) {
-    self.checkUsername = $injector.get('easyBibApiAccessUsername');
+    self.getUsername = $injector.get('easyBibApiAccessUsername');
   }
 
   // private
@@ -233,7 +233,7 @@ module.exports = function($injector, $q, $http, store, $timeout, easyBibApiAcces
       accessData = store.get('easybib-api-access-data');
 
       if (accessData !== null) {
-        if (!self.checkUsername || self.checkUsername() === accessData.username) {
+        if (!self.getUsername || self.getUsername() === accessData.username) {
           deferred.resolve(accessData);
           return deferred.promise;
         }
@@ -241,8 +241,8 @@ module.exports = function($injector, $q, $http, store, $timeout, easyBibApiAcces
 
       $http.get(easyBibApiAccessUrl(), self.accessTokenHttpOptions)
         .then(function(response) {
-          if (self.checkUsername) {
-            response.data.username = self.checkUsername();
+          if (self.getUsername) {
+            response.data.username = self.getUsername();
           }
 
           self.store.set('easybib-api-access-data', response.data);
