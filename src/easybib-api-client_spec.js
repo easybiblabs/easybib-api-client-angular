@@ -1,6 +1,6 @@
 /*global __dirname*/
 require('angular');
-require('angular-storage');
+require('angular-local-storage');
 require('angular-mocks');
 require('./index');
 
@@ -58,7 +58,7 @@ describe('EasyBib Api Client', function() {
 
   describe('get()', function() {
     it('should add access-token to request headers', function() {
-      localStorage.setItem('easybib-api-access-data',
+      localStorage.setItem('ls.easybib-api-access-data',
         JSON.stringify(fixtures.accessTokenResponse));
 
       $httpBackend.expectGET('http://noopurl.notld/citations',
@@ -73,7 +73,7 @@ describe('EasyBib Api Client', function() {
 
   describe('get()', function() {
     it('should use the globalOptions', function() {
-      localStorage.setItem('easybib-api-access-data',
+      localStorage.setItem('ls.easybib-api-access-data',
         JSON.stringify(fixtures.accessTokenResponse));
 
       $httpBackend.expectGET('http://url-set-via-opts.example.com',
@@ -90,7 +90,7 @@ describe('EasyBib Api Client', function() {
 
   describe('post()', function() {
     it('should add access-token to request headers', function() {
-      localStorage.setItem('easybib-api-access-data',
+      localStorage.setItem('ls.easybib-api-access-data',
         JSON.stringify(fixtures.accessTokenResponse));
 
       $httpBackend.expectPOST('http://noopurl.notld/citations',
@@ -105,7 +105,7 @@ describe('EasyBib Api Client', function() {
 
   describe('put()', function() {
     it('should add access-token to request headers', function() {
-      localStorage.setItem('easybib-api-access-data',
+      localStorage.setItem('ls.easybib-api-access-data',
         JSON.stringify(fixtures.accessTokenResponse));
 
       $httpBackend.expectPUT('http://noopurl.notld/citations',
@@ -120,7 +120,7 @@ describe('EasyBib Api Client', function() {
 
   describe('delete()', function() {
     it('should add access-token to request headers', function() {
-      localStorage.setItem('easybib-api-access-data',
+      localStorage.setItem('ls.easybib-api-access-data',
         JSON.stringify(fixtures.accessTokenResponse));
 
       $httpBackend.expectDELETE('http://noopurl.notld/citations',
@@ -135,7 +135,7 @@ describe('EasyBib Api Client', function() {
 
   describe('request()', function() {
     it('should fetch access-token on 401 error and retry', function() {
-      localStorage.removeItem('easybib-api-access-data');
+      localStorage.removeItem('ls.easybib-api-access-data');
       easybibApiClient.get('http://noopurl.notld/citations');
 
       $httpBackend.expectGET('http://noopurl.notld/access_token')
@@ -160,7 +160,7 @@ describe('EasyBib Api Client', function() {
     });
 
     it('should fetch access-token on 400 error and retry', function() {
-      localStorage.removeItem('easybib-api-access-data');
+      localStorage.removeItem('ls.easybib-api-access-data');
       easybibApiClient.get('http://noopurl.notld/citations');
 
       $httpBackend.expectGET('http://noopurl.notld/access_token')
@@ -185,7 +185,7 @@ describe('EasyBib Api Client', function() {
     });
 
     it('retryCount is used correctly', function() {
-      localStorage.removeItem('easybib-api-access-data');
+      localStorage.removeItem('ls.easybib-api-access-data');
       easybibApiClient.retryCount = 2;
       easybibApiClient.get('http://noopurl.notld/citations');
 
@@ -222,7 +222,7 @@ describe('EasyBib Api Client', function() {
     });
 
     it('should not fetch access-token on 404 error', function() {
-      localStorage.removeItem('easybib-api-access-data');
+      localStorage.removeItem('ls.easybib-api-access-data');
       easybibApiClient.get('http://noopurl.notld/citations');
 
       $httpBackend.expectGET('http://noopurl.notld/access_token')
@@ -238,7 +238,7 @@ describe('EasyBib Api Client', function() {
 
     it('should reject if retries also fail', function(done) {
 
-      localStorage.removeItem('easybib-api-access-data');
+      localStorage.removeItem('ls.easybib-api-access-data');
       easybibApiClient.get('http://noopurl.notld/citations')
         .then(function() {
           // NOTE: in case that the underlying implementation

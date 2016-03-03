@@ -1,11 +1,11 @@
 var angular = require('angular');
 
-module.exports = function($injector, $q, $http, store, $timeout, easyBibApiAccessUrl) {
+module.exports = function($injector, $q, $http, localStorageService, $timeout, easyBibApiAccessUrl) {
   'use strict';
 
   var self = this, utils;
 
-  self.store = store;
+  self.store = localStorageService;
   self.$q = $q;
   self.$http = $http;
   self.accessTokenHttpOptions = {};
@@ -22,7 +22,7 @@ module.exports = function($injector, $q, $http, store, $timeout, easyBibApiAcces
       var deferred, accessData;
 
       deferred = $q.defer();
-      accessData = store.get('easybib-api-access-data');
+      accessData = self.store.get('easybib-api-access-data');
 
       if (accessData !== null) {
         if (!self.getUsername || self.getUsername() === accessData.username) {
