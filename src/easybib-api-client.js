@@ -31,20 +31,25 @@ module.exports = function($injector, $q, $http, localStorageService, $timeout, e
         }
       }
 
-      $http.get(easyBibApiAccessUrl(), self.accessTokenHttpOptions)
-        .then(function(response) {
-          if (self.getUsername) {
-            response.data.username = self.getUsername();
-          }
+      if (typeof easyBibApiAccessUrl === 'function') {
+        easyBibApiAccessUrl = easyBibApiAccessUrl();
+      }
+      $q.when(easyBibApiAccessUrl).then(function(accessUrl) {
+        $http.get(accessUrl, self.accessTokenHttpOptions)
+          .then(function(response) {
+            if (self.getUsername) {
+              response.data.username = self.getUsername();
+            }
 
-          self.store.set('easybib-api-access-data', response.data);
-          deferred.resolve(response.data);
-        })
-        .catch(function(error) {
-          // accessToken couldn't be fetched
-          // so need to add a generic error handler here
-          deferred.reject(error);
-        });
+            self.store.set('easybib-api-access-data', response.data);
+            deferred.resolve(response.data);
+          })
+          .catch(function(error) {
+            // accessToken couldn't be fetched
+            // so need to add a generic error handler here
+            deferred.reject(error);
+          });
+      });
 
       return deferred.promise;
     },
