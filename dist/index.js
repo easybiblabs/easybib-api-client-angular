@@ -464,7 +464,9 @@ module.exports = function($injector, $q, $http, localStorageService, $timeout, e
   self.store = localStorageService;
   self.$q = $q;
   self.$http = $http;
-  self.accessTokenHttpOptions = {};
+  self.accessTokenHttpOptions = {
+    withCredentials: true
+  };
   if ($injector.has('easyBibApiAccessUsername')) {
     self.getUsername = $injector.get('easyBibApiAccessUsername');
   }
